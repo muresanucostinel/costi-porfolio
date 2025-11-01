@@ -1,0 +1,5 @@
+#post-template {
+  background-image: url("../post-bg.png");
+  background-size: cover;
+  background-position: center;
+}
