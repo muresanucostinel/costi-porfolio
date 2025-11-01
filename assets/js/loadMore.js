@@ -28,3 +28,5 @@ function loadPosts(buttonText = "Load More") {
 
   postsContainer.after(loadMoreBtn);
 }
+
+console.log("Load more button initialized!");
