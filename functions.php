@@ -38,7 +38,74 @@ function cm_theme_setup() {
 add_action( 'after_setup_theme', 'cm_theme_setup' );
 
 
-function cm_headless_enqueue_scripts() {
+/**
+ * Enqueue scripts and styles
+ */
+
+// -----------------------------
+// 1️⃣ Global STYLES (CSS)
+// -----------------------------
+function cm_enqueue_styles() {
+  // Main compiled CSS
+  wp_enqueue_style(
+    'cm-main',
+    get_stylesheet_directory_uri() . '/assets/css/main.css',
+    array(),
+    filemtime( get_stylesheet_directory() . '/assets/css/main.css' ),
+    'all'
+  );
+
+  // Default WordPress style.css (required)
+  wp_enqueue_style(
+    'cm-style',
+    get_stylesheet_uri(),
+    array('cm-main'),
+    filemtime( get_stylesheet_directory() . '/style.css' ),
+    'all'
+  );
+}
+add_action( 'wp_enqueue_scripts', 'cm_enqueue_styles' );
+
+
+// -----------------------------
+// 2️⃣ Global SCRIPTS (JS)
+// -----------------------------
+function cm_enqueue_global_scripts() {
+  // Main JS (for general site usage)
+  wp_enqueue_script(
+    'cm-main',
+    get_template_directory_uri() . '/assets/js/main.js',
+    array(),
+    wp_get_theme()->get( 'Version' ),
+    true
+  );
+
+  // Dropdown logic (global, used anywhere)
+  wp_enqueue_script(
+    'cm-dropdowns',
+    get_template_directory_uri() . '/assets/js/dropdowns.js',
+    array( 'cm-main' ),
+    wp_get_theme()->get( 'Version' ),
+    true
+  );
+
+  // Tailwind Elements (global UI library)
+  wp_enqueue_script(
+    'cm-tailwind-elements',
+    'https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1',
+    array(),
+    null,
+    true
+  );
+}
+add_action( 'wp_enqueue_scripts', 'cm_enqueue_global_scripts' );
+
+
+// -----------------------------
+// 3️⃣ Template-specific SCRIPTS (Headless)
+// -----------------------------
+function cm_enqueue_headless_scripts() {
+  // Only load for headless template
   if ( is_page_template( 'template-headless.php' ) ) {
     wp_enqueue_script(
       'headless-main',
@@ -47,44 +114,22 @@ function cm_headless_enqueue_scripts() {
       null,
       true
     );
+
     wp_enqueue_script(
       'headless-controller',
       get_stylesheet_directory_uri() . '/assets/js/paginationController.js',
-      array('headless-main'),
+      array( 'headless-main' ),
       null,
       true
     );
+
     wp_enqueue_script(
       'headless-loadmore',
       get_stylesheet_directory_uri() . '/assets/js/loadMore.js',
-      array('headless-controller'),
+      array( 'headless-controller' ),
       null,
       true
     );
   }
 }
-add_action( 'wp_enqueue_scripts', 'cm_headless_enqueue_scripts' );
-
-
-function cm_enqueue_styles() {
-
-  // 1️⃣ Enqueue main.css from /assets/css/
-  wp_enqueue_style(
-    'cm-main', // unique handle
-    get_stylesheet_directory_uri() . '/assets/css/main.css',
-    array(), // no dependencies
-    filemtime( get_stylesheet_directory() . '/assets/css/main.css' ), // cache-busting
-    'all'
-  );
-
-  // 2️⃣ Enqueue theme’s default style.css (required by WordPress)
-  wp_enqueue_style(
-    'cm-style',
-    get_stylesheet_uri(), // points to /style.css automatically
-    array('cm-main'), // loads after main.css
-    filemtime( get_stylesheet_directory() . '/style.css' ),
-    'all'
-  );
-}
-add_action( 'wp_enqueue_scripts', 'cm_enqueue_styles' );
-
+add_action( 'wp_enqueue_scripts', 'cm_enqueue_headless_scripts' );
