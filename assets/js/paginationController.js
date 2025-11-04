@@ -11,6 +11,8 @@ function pagController() {
   let activeCategories = [];
   let activeTags = [];
 
+  let sortDirection = null; // 'asc', 'desc', or null
+
   // ============================
   // Function: setFilters
   // Called when user changes category/tag filters
@@ -68,6 +70,10 @@ function pagController() {
       tags: activeTags.join(","),
     });
 
+    // If sorting is active, re-sort after loading new posts
+    if (sortDirection) {
+      sortPosts();
+    }
     // Update total pages on first fetch
     if (!totalPages) totalPages = result.totalPages || 1;
 
@@ -88,7 +94,13 @@ function pagController() {
   }
 
   // Public API
-  return { loadNextPage, setFilters };
+  return {
+    loadNextPage,
+    setFilters,
+    setSort: (direction) => (sortDirection = direction),
+    clearSort: () => (sortDirection = null),
+    getSort: () => sortDirection,
+  };
 }
 
 // ============================
@@ -106,6 +118,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Load initial posts (page 1)
   controller.loadNextPage();
 
-  // Create the Load More button view
-  loadPosts("See More Posts");
+  // Create Load More button if loadPosts exists
+  if (typeof loadPosts === "function") {
+    loadPosts("See More Posts");
+  } else {
+    console.warn(
+      "loadPosts() not available yet. Make sure loadMore.js loads before paginationController.js"
+    );
+  }
 });

@@ -39,97 +39,66 @@ add_action( 'after_setup_theme', 'cm_theme_setup' );
 
 
 /**
- * Enqueue scripts and styles
+ * Enqueue scripts and styles in the correct order
  */
 
-// -----------------------------
-// 1️⃣ Global STYLES (CSS)
-// -----------------------------
-function cm_enqueue_styles() {
-  // Main compiled CSS
-  wp_enqueue_style(
-    'cm-main',
-    get_stylesheet_directory_uri() . '/assets/css/main.css',
-    array(),
-    filemtime( get_stylesheet_directory() . '/assets/css/main.css' ),
-    'all'
-  );
+function costi_enqueue_assets() {
+    // ============================
+    // CSS Styling
+    // ============================
 
-  // Default WordPress style.css (required)
-  wp_enqueue_style(
-    'cm-style',
-    get_stylesheet_uri(),
-    array('cm-main'),
-    filemtime( get_stylesheet_directory() . '/style.css' ),
-    'all'
-  );
-}
-add_action( 'wp_enqueue_scripts', 'cm_enqueue_styles' );
-
-
-// -----------------------------
-// 2️⃣ Global SCRIPTS (JS)
-// -----------------------------
-function cm_enqueue_global_scripts() {
-  // Main JS (for general site usage)
-  wp_enqueue_script(
-    'cm-main',
-    get_template_directory_uri() . '/assets/js/main.js',
-    array(),
-    wp_get_theme()->get( 'Version' ),
-    true
-  );
-
-  // Dropdown logic (global, used anywhere)
-  wp_enqueue_script(
-    'cm-dropdowns',
-    get_template_directory_uri() . '/assets/js/dropdowns.js',
-    array( 'cm-main' ),
-    wp_get_theme()->get( 'Version' ),
-    true
-  );
-
-  // Tailwind Elements (global UI library)
-  wp_enqueue_script(
-    'cm-tailwind-elements',
-    'https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1',
-    array(),
-    null,
-    true
-  );
-}
-add_action( 'wp_enqueue_scripts', 'cm_enqueue_global_scripts' );
-
-
-// -----------------------------
-// 3️⃣ Template-specific SCRIPTS (Headless)
-// -----------------------------
-function cm_enqueue_headless_scripts() {
-  // Only load for headless template
-  if ( is_page_template( 'template-headless.php' ) ) {
-    wp_enqueue_script(
-      'headless-main',
-      get_stylesheet_directory_uri() . '/assets/js/main.js',
-      array(),
-      null,
-      true
+    wp_enqueue_style(
+        'costi-tailwind',
+        get_template_directory_uri() . '/assets/css/output.css',
+        [],
+        null
     );
 
-    wp_enqueue_script(
-      'headless-controller',
-      get_stylesheet_directory_uri() . '/assets/js/paginationController.js',
-      array( 'headless-main' ),
-      null,
-      true
+    wp_enqueue_style(
+        'costi-style',
+        get_template_directory_uri() . '/assets/css/style.css',
+        [],
+        null
     );
 
+    // ============================
+    // JavaScript Files
+    // ============================
+
+    // 1. Main logic + fetchPosts
     wp_enqueue_script(
-      'headless-loadmore',
-      get_stylesheet_directory_uri() . '/assets/js/loadMore.js',
-      array( 'headless-controller' ),
-      null,
-      true
+        'costi-main-js',
+        get_template_directory_uri() . '/assets/js/main.js',
+        [],
+        null,
+        true
     );
-  }
+
+    // 2. Load More button (defines loadPosts function)
+    wp_enqueue_script(
+        'costi-loadmore-js',
+        get_template_directory_uri() . '/assets/js/loadMore.js',
+        ['costi-main-js'], // ✅ depends on main
+        null,
+        true
+    );
+
+    // 3. Dropdowns UI
+    wp_enqueue_script(
+        'costi-dropdowns-js',
+        get_template_directory_uri() . '/assets/js/dropdowns.js',
+        ['costi-main-js'], // ✅ safe dependency
+        null,
+        true
+    );
+
+    // 4. Pagination Controller (MUST load after loadMore + dropdowns)
+    wp_enqueue_script(
+        'costi-pagination-js',
+        get_template_directory_uri() . '/assets/js/paginationController.js',
+        ['costi-loadmore-js', 'costi-dropdowns-js'], // ✅ sorted order
+        null,
+        true
+    );
 }
-add_action( 'wp_enqueue_scripts', 'cm_enqueue_headless_scripts' );
+add_action('wp_enqueue_scripts', 'costi_enqueue_assets');

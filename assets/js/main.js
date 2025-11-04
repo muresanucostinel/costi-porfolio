@@ -80,6 +80,7 @@ async function fetchPosts({
       // Step 5: Create a card for each post
       // -----------------------------
       const postCard = document.createElement("div");
+      postCard.dataset.date = post.date;
       postCard.className =
         "bg-white/90 text-black rounded-xl shadow-lg p-4 transition hover:-translate-y-1 hover:scale-105 hover:shadow-2xl";
 
@@ -161,4 +162,21 @@ async function cm_fetchTags({
   } catch (error) {
     console.error("Error fetching tags:", error);
   }
+}
+
+function sortPosts() {
+  const postsContainer = document.getElementById("posts");
+  const cards = Array.from(postsContainer.children);
+
+  const direction = controller.getSort(); // 'asc' or 'desc'
+  if (!direction) return; // no sorting active
+
+  cards.sort((a, b) => {
+    const d1 = new Date(a.dataset.date);
+    const d2 = new Date(b.dataset.date);
+    return direction === "desc" ? d2 - d1 : d1 - d2;
+  });
+
+  postsContainer.innerHTML = "";
+  cards.forEach((c) => postsContainer.appendChild(c));
 }
