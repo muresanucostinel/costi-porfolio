@@ -24,97 +24,31 @@
 
 async function fetchPosts({
   perPage = 6,
-  fallbackImage = "https://placehold.co/600x400?text=No+Image",
-  apiUrl = "http://headless-wp.local/wp-json/wp/v2/posts?_embed",
+  apiUrl = "http://headless-wp.local/wp-json/costi/v1/load-posts",
   page = 1,
-  onTotalPages = null,
   categories = "",
   tags = "",
 } = {}) {
   try {
-    // -----------------------------
-    // Step 1: Construct the URL
-    // -----------------------------
-
-    let fullUrl = `${apiUrl}&per_page=${perPage}&page=${page}`;
-
+    // Build URL
+    let fullUrl = `${apiUrl}?perPage=${perPage}&page=${page}`;
     if (categories) fullUrl += `&categories=${categories}`;
     if (tags) fullUrl += `&tags=${tags}`;
     console.log("Fetching posts from:", fullUrl);
 
-    // -----------------------------
-    // Step 2: Fetch the posts
-    // -----------------------------
     const response = await fetch(fullUrl);
-
-    // Check if fetch was successful
     if (!response.ok) throw new Error("Failed to fetch posts");
 
-    const totalPosts = response.headers.get("X-WP-Total");
-    const totalPages = response.headers.get("X-WP-TotalPages");
+    const data = await response.json();
+    console.log("REST response:", data);
 
-    console.log(`Total posts: ${totalPosts}, Total pages: ${totalPages}`);
-
-    // Parse JSON from response
-    const posts = await response.json();
-    console.log("Posts received:", posts);
-
-    // -----------------------------
-    // Step 3: Get the container in DOM
-    // -----------------------------
+    // Insert new HTML into container
     const postsContainer = document.getElementById("posts");
+    postsContainer.insertAdjacentHTML("beforeend", data.html);
 
-    // -----------------------------
-    // Step 4: Loop through each post
-    // -----------------------------
-    posts.forEach((post) => {
-      /**
-       * Featured image logic:
-       * - If post has a featured image, use it
-       * - Otherwise, use fallback image
-       */
-      const featured =
-        post._embedded?.["wp:featuredmedia"]?.[0]?.source_url || fallbackImage;
-
-      // -----------------------------
-      // Step 5: Create a card for each post
-      // -----------------------------
-      const postCard = document.createElement("div");
-      postCard.dataset.date = post.date;
-      postCard.className =
-        "bg-white/90 text-black rounded-xl shadow-lg p-4 transition hover:-translate-y-1 hover:scale-105 hover:shadow-2xl";
-
-      postCard.classList.add(
-        "post-card",
-        "bg-white",
-        "rounded-lg",
-        "shadow-md",
-        "p-4",
-        "transition",
-        "duration-300",
-        "transform",
-        "hover:-translate-y-1",
-        "hover:shadow-xl",
-        "cursor-pointer"
-      );
-
-      postCard.innerHTML = `
-          <img src="${featured}" alt="${post.title.rendered}" class="w-full h-48 object-cover rounded-lg mb-3">
-          <h2 class="text-xl font-semibold mb-2">${post.title.rendered}</h2>
-          <div class="text-gray-600 text-sm">${post.excerpt.rendered}</div>
-          <div class="flex text-sm pt-2"><a href="${post._embedded?.author?.[0]?.link}">${post._embedded?.author?.[0]?.name}</a><span class="flex text-sm text-right item-end"><img src="${post._embedded?.author?.[0]?.avatar_urls?.[24]}"</span></div>
-        `;
-
-      // -----------------------------
-      // Step 6: Append the card to the container
-      // -----------------------------
-      postsContainer.appendChild(postCard);
-    });
-    return { totalPages };
+    // Return total pages if available
+    return { totalPages: data.totalPages ?? null };
   } catch (error) {
-    // -----------------------------
-    // Step 7: Catch errors
-    // -----------------------------
     console.error("Error fetching posts:", error);
     return { totalPages: null };
   }

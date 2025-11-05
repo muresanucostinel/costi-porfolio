@@ -1,5 +1,10 @@
 <?php
 
+require_once get_template_directory() . '/includes/helpers.php';
+require_once get_template_directory() . '/includes/endpoints.php';
+
+
+
 function cm_theme_setup() {
 
   // 1️⃣ Add support for dynamic <title> tag

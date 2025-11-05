@@ -115,15 +115,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Render category/tag filters and pass controller for interaction
   await cm_renderFilters(controller);
 
-  // Load initial posts (page 1)
-  controller.loadNextPage();
-
-  // Create Load More button if loadPosts exists
+  // Create Load More button
   if (typeof loadPosts === "function") {
     loadPosts("See More Posts");
-  } else {
-    console.warn(
-      "loadPosts() not available yet. Make sure loadMore.js loads before paginationController.js"
-    );
   }
+
+  // Load initial posts (page 1) AFTER button exists
+  controller.loadNextPage();
 });
